@@ -1,0 +1,47 @@
+name: Code Quality Checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    name: Lint & Static Analysis
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: 📦 Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: 📥 Install dependencies (no root package)
+        run: |
+          poetry install --no-root
+
+      - name: 🎨 Run Black
+        run: poetry run black --check .
+
+      - name: 📚 Run isort
+        run: poetry run isort . --check-only
+
+      - name: 🔍 Run Flake8
+        run: poetry run flake8
+
+      - name: 🛡 Run Bandit
+        run: poetry run bandit -r .
+
+      - name: ✅ Run Pre-Commit Hooks
+        run: |
+          poetry run pre-commit install
+          poetry run pre-commit run --all-files
